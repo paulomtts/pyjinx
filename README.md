@@ -1,6 +1,6 @@
 # PyJinx
 
-Build reusable, type-safe UI components in Python. PyJinx combines Pydantic models with Jinja2 templates to give you automatic template discovery, nested composition, and JavaScript integration—all without manual wiring.
+Declare reusable, type-safe UI components for template-based web apps in Python. PyJinx combines Pydantic models with Jinja2 templates to give you automatic template discovery, nested composition, and JavaScript integration—all without manual wiring.
 
 ## Installation
 
