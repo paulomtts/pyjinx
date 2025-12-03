@@ -18,6 +18,7 @@ pip install pyjinx
 **Global Component Registry**
 - Every component automatically registers itself by its `id` when instantiated
 - All registered components are available in any template context by using its id: `{{ component_id }}`
+- Manage the registry state as you wish, have it be request-scoped - or not!
 
 **Nested Components**
 - Pass components as fields to other components
