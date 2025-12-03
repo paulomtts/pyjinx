@@ -141,15 +141,3 @@ Registry.clear()
 ```
 
 We recomend you clear the registry before each request is processed.
-
-## Requirements
-
-- Python >= 3.13
-- Jinja2 >= 3.1.6
-- Pydantic >= 2.12.5
-- MarkupSafe >= 3.0.3
-
-## License
-
-MIT
-

@@ -9,7 +9,7 @@ import re
 from contextvars import ContextVar
 from typing import Any, ClassVar, Optional, Tuple
 
-from jinja2 import Template
+from jinja2 import Environment, FileSystemLoader, Template
 from markupsafe import Markup
 from pydantic import BaseModel, Field, field_validator
 
@@ -48,15 +48,15 @@ class Registry:
 class BaseComponent(BaseModel):
     "Provides functionality for declaring UI components in python."
 
-    _engine: ClassVar[Optional[Template]] = None
+    _engine: ClassVar[Optional[Environment]] = None
 
     @classmethod
-    def set_engine(cls, templates: Template):
+    def set_engine(cls, environment: Environment):
         """
-        Sets the Jinja2 templates engine for all components that inherit from this base class.
+        Sets the Jinja2 environment for all components that inherit from this base class.
         This should be called once at application startup.
         """
-        cls._engine = templates
+        cls._engine = environment
 
     id: str = Field(..., description="The unique ID for this component.")
     js: Optional[str] = Field(
@@ -94,7 +94,18 @@ class BaseComponent(BaseModel):
     def _get_relative_path(self, name: str | None = None) -> str:
         raw_path = self._get_raw_path()
         snake_case_name = self._get_snake_case_name(name)
-        return f"{raw_path.split('/ui')[1]}/{snake_case_name}.html"
+        
+        if BaseComponent._engine is None:
+            raise ValueError("Jinja2 environment not set. Call BaseComponent.set_engine() first.")
+        
+        loader = BaseComponent._engine.loader
+        if not isinstance(loader, FileSystemLoader):
+            raise ValueError("Jinja2 loader must be a FileSystemLoader")
+        
+        search_path = loader.searchpath[0] if isinstance(loader.searchpath, list) else loader.searchpath
+        relative_dir = os.path.relpath(raw_path, search_path).replace("\\", "/")
+        
+        return f"{relative_dir}/{snake_case_name}.html"
 
     def _get_js_file_name(self) -> str | None:
         raw_path = self._get_raw_path()
@@ -108,8 +119,8 @@ class BaseComponent(BaseModel):
         if source is None:
             relative_path = self._get_relative_path()
             template: Template = BaseComponent._engine.get_template(relative_path)
-            source = template.environment.loader.get_source(
-                template.environment, template.name
+            source = BaseComponent._engine.loader.get_source(
+                BaseComponent._engine, template.name
             )[0]
             return template, source
         else:
