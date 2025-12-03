@@ -1,6 +1,6 @@
 # PyJinx
 
-Server-side UI components for Python using Pydantic and Jinja2 templates. Build reusable, type-safe components that automatically discover templates and handle nested rendering.
+Build reusable, type-safe UI components in Python. PyJinx combines Pydantic models with Jinja2 templates to give you automatic template discovery, nested composition, and JavaScript integration—all without manual wiring.
 
 ## Installation
 
@@ -8,136 +8,122 @@ Server-side UI components for Python using Pydantic and Jinja2 templates. Build 
 pip install pyjinx
 ```
 
-## Quick Start
+## Core Capabilities
 
-### 1. Set up the template engine
+**Automatic Template Discovery**
+- Define a component class and place an HTML template in the same directory with a matching name
+- PyJinx automatically finds `components/ui/button.html` for a `Button` class in `components/ui/button.py`
+- No manual template path configuration needed
+
+**Global Component Registry**
+- Every component automatically registers itself by its `id` when instantiated
+- All registered components are available in any template context by using its id: `{{ component_id }}`
+
+**Nested Components**
+- Pass components as fields to other components
+- Nested components are wrapped in an `Object` that provides:
+  - `.html` - the rendered HTML string for simple inclusion
+  - `.properties` - access to the component instance and its properties
+- Works with single components, lists, and dictionaries
+
+**JavaScript Integration**
+- Place a `.js` file next to your component template (e.g., `button.js` next to `button.html`)
+- JavaScript is automatically collected during rendering and bundled into a single `<script>` tag at the root level
+- Specify a custom JS filename with the `js` field
+
+**Extra HTML Templates**
+- Include additional HTML files via the `html` field (list of file paths)
+- Each extra template is rendered and added to the context by its filename
+- Access rendered content via `{{ filename.html }}` in your main template
+
+## Technical Details
+
+- **Type Safety**: Pydantic models provide validation and IDE support
+- **Template Engine**: Jinja2 with FileSystemLoader (customizable)
+- **Rendering**: Components render via `render()` or automatically via `__html__()`
+- **Context Management**: Thread-safe context variables for registry and script collection
+- **Required Fields**: `id` (unique identifier)
+- **Optional Fields**: `js` (custom JS filename), `html` (list of extra HTML files)
+
+## Complete Example
 
 ```python
-from jinja2 import Environment, FileSystemLoader
-from pyjinx import BaseComponent
-
-env = Environment(loader=FileSystemLoader("templates"))
-BaseComponent.set_engine(env)
-```
-
-### 2. Create a component
-
-Create a template file at `templates/ui/button.html`:
-
-```html
-<button id="{{ id }}" class="btn">{{ text }}</button>
-```
-
-Define the component class:
-
-```python
+# components/ui/button.py
 from pyjinx import BaseComponent
 
 class Button(BaseComponent):
     id: str
     text: str
+    variant: str = "primary"
 ```
-
-### 3. Use the component
-
-```python
-button = Button(id="submit-btn", text="Click Me")
-```
-
-In Jinja2 templates, components render automatically:
 
 ```html
-{{ submit-btn }}
+<!-- components/ui/button.html -->
+<button id="{{ id }}" class="btn btn-{{ variant }}">{{ text }}</button>
 ```
 
-## Features
-
-### Automatic Template Discovery
-
-Components automatically find their templates based on class name and location. A `Button` class in `components/` will look for `components/ui/button.html`.
-
-### Nested Components
-
-Components can contain other components:
+```javascript
+// components/ui/button.js
+console.log('Button {{ id }} initialized');
+```
 
 ```python
+# components/ui/card.py
+from pyjinx import BaseComponent
+from components.ui.button import Button
+
 class Card(BaseComponent):
     id: str
     title: str
-    content: Button  # Nested component
-
-card = Card(
-    id="card-1",
-    title="My Card",
-    content=Button(id="btn-1", text="Action")
-)
+    content: Button
 ```
-
-Nested components are automatically rendered and available in the template context by their ID.
-
-### JavaScript Integration
-
-Place a JavaScript file next to your component (e.g., `button.js`), and it will be automatically inlined in the rendered HTML:
-
-```javascript
-// button.js
-document.getElementById('{{ id }}').addEventListener('click', () => {
-    console.log('Button clicked!');
-});
-```
-
-### FastAPI Integration
-
-```python
-from fastapi import FastAPI
-from fastapi.responses import HTMLResponse
-from pyjinx import BaseComponent
-
-app = FastAPI()
-
-@app.get("/", response_class=HTMLResponse)
-async def home():
-    button = Button(id="home-btn", text="Home")
-    return button.render()
-```
-
-### HTMX Compatibility
-
-Components work seamlessly with HTMX for dynamic updates:
 
 ```html
-<!-- card.html -->
-<div id="{{ id }}" hx-get="/api/card/{{ id }}" hx-trigger="refresh">
-    {{ title }}
-    {{ content }}
+<!-- components/ui/card.html -->
+<div id="{{ id }}" class="card">
+    <h2>{{ title }}</h2>
+    <div class="card-body">
+        {{ content.html }}
+    </div>
+    <div class="card-footer">
+        {{ footer.html }}
+    </div>
 </div>
 ```
 
-```python
-@app.get("/api/card/{card_id}", response_class=HTMLResponse)
-async def get_card(card_id: str):
-    card = Card(id=card_id, title="Dynamic Card", content=...)
-    return card.render()
+```html
+<!-- components/ui/footer.html -->
+<p class="footer-text">© 2024 My App</p>
 ```
 
-## Component Fields
-
-- `id` (required): Unique identifier for the component
-- `js` (optional): Custom JavaScript file name
-- `html` (optional): List of additional HTML template files to include
-
-## Component Registry
-
-All components are automatically registered and available in the global template context:
-
 ```python
-from pyjinx import Registry
+# Usage
+from components.ui.card import Card
+from components.ui.button import Button
 
-# Access all registered components
-components = Registry.get()
+action_btn = Button(id="action-1", text="Submit", variant="success")
 
-# Clear the registry
-Registry.clear()
+card = Card(
+    id="form-card",
+    title="User Form",
+    content=action_btn,
+    html=["components/ui/footer.html"]
+)
+
+# Render the component
+html = card.render()
+# The card template can access:
+# - Nested components via .html (e.g., {{ content.html }})
+# - Component properties via .properties (e.g., {{ content.properties.text }})
+# - Extra HTML templates via .html (e.g., {{ footer.html }})
+# - Any registered component by ID (e.g., {{ action-1 }})
+# - All JavaScript files bundled at the end
 ```
 
-We recomend you clear the registry before each request is processed.
+```html
+<!-- Render any component by ID in any template -->
+<!-- page.html -->
+<div>{{ form-card }}</div>
+```
+
+This example demonstrates nested components, extra HTML templates, the global registry, Object wrapping with `.html` and `.properties`, automatic template discovery, JavaScript bundling, and rendering components by ID.
