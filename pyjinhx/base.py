@@ -48,7 +48,10 @@ class Object(BaseModel):
     A wrapper for nested components. Enables access to the component's properties and rendered HTML.
     """
     html: str
-    properties: Optional["BaseComponent"]
+    props: Optional["BaseComponent"]
+
+    def __str__(self) -> Markup:
+        return self.html
 
 
 
@@ -172,17 +175,17 @@ class BaseComponent(BaseModel):
         Updates the context with rendered components by their ID.
         """
         if isinstance(field_value, BaseComponent):
-            context[field_name] = Object(html=field_value.render(base_context=context), properties=field_value)
+            context[field_name] = Object(html=field_value.render(base_context=context), props=field_value)
         elif isinstance(field_value, list):
             for item in field_value:
                 if isinstance(item, BaseComponent):
-                    context[field_name] = Object(html=item.render(base_context=context), properties=item)
+                    context[field_name] = Object(html=item.render(base_context=context), props=item)
         elif isinstance(field_value, dict) and all(
             isinstance(value, BaseComponent) for value in field_value.values()
         ):
             for item in field_value.values():
                 if isinstance(item, BaseComponent):
-                    context[field_name] = Object(html=item.render(base_context=context), properties=item)
+                    context[field_name] = Object(html=item.render(base_context=context), props=item)
         return context
 
     def _get_javascript_content(self) -> str | None:
@@ -229,7 +232,7 @@ class BaseComponent(BaseModel):
                     html_template = file.read()
                     extra_markup = self.render(html_template, context)
                     html_key = html_file.split("/")[-1].split(".")[0]
-                    context[html_key] = Object(html=extra_markup, properties=None)
+                    context[html_key] = Object(html=extra_markup, props=None)
 
         # 4. Render template
         rendered_template = template.render(context)

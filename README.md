@@ -24,7 +24,7 @@ pip install pyjinhx
 - Pass components as fields to other components
 - Nested components are wrapped in an `Object` that provides:
   - `.html` - the rendered HTML string for simple inclusion
-  - `.properties` - access to the component instance and its properties
+  - `.props` - access to the component instance and its properties
 - Works with single components, lists, and dictionaries
 
 **JavaScript Integration**
@@ -115,7 +115,7 @@ card = Card(
 html = card.render()
 # The card template can access:
 # - Nested components via .html (e.g., {{ content.html }})
-# - Component properties via .properties (e.g., {{ content.properties.text }})
+# - Component properties via .props (e.g., {{ content.props.text }})
 # - Extra HTML templates via .html (e.g., {{ footer.html }})
 # - Any registered component by ID (e.g., {{ action-1 }})
 # - All JavaScript files bundled at the end
@@ -127,4 +127,4 @@ html = card.render()
 <div>{{ form-card }}</div>
 ```
 
-This example demonstrates nested components, extra HTML templates, the global registry, Object wrapping with `.html` and `.properties`, automatic template discovery, JavaScript bundling, and rendering components by ID.
+This example demonstrates nested components, extra HTML templates, the global registry, Object wrapping with `.html` and `.props`, automatic template discovery, JavaScript bundling, and rendering components by ID.
