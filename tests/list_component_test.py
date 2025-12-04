@@ -68,9 +68,5 @@ def test_list_component():
     </div>
 </div>
 
-<script>console.log('Button loaded');
-console.log('Button loaded');
-console.log('Button loaded');
-console.log('Button loaded');
-console.log('Button loaded');</script>"""
+<script>console.log('Button loaded');</script>"""
 

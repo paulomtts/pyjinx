@@ -21,7 +21,7 @@ _scripts_context: ContextVar[list[str]] = ContextVar(
 )
 
 _collected_js_context: ContextVar[set[str]] = ContextVar(
-    "collected_js_components", default=set()
+    "collected_js_files", default=set()
 )
 
 
@@ -100,7 +100,7 @@ class BaseComponent(BaseModel):
     )
 
     @classmethod
-    def _ensure_engine(cls) -> Environment:
+    def _ensure_engine_(cls) -> Environment:
         """
         Ensures the Jinja2 environment is initialized.
         Creates it automatically if not already set.
@@ -139,7 +139,7 @@ class BaseComponent(BaseModel):
         raw_path = self._get_raw_path()
         snake_case_name = self._get_snake_case_name(name)
 
-        engine = BaseComponent._ensure_engine()
+        engine = BaseComponent._ensure_engine_()
         loader = engine.loader
         if not isinstance(loader, FileSystemLoader):
             raise ValueError("Jinja2 loader must be a FileSystemLoader")
@@ -153,23 +153,15 @@ class BaseComponent(BaseModel):
 
         return f"{relative_dir}/{snake_case_name}.html"
 
-    def _get_js_file_name(self) -> str | None:
-        raw_path = self._get_raw_path()
-        snake_case_name = self.js if self.js else self._get_snake_case_name()
-        js_file_name = snake_case_name.replace("_", "-") + ("" if self.js else ".js")
-        if not os.path.exists(f"{raw_path}/{js_file_name}"):
-            return None
-        return js_file_name
-
     def _load_template(self, source: str | None = None) -> Template:
-        engine = BaseComponent._ensure_engine()
+        engine = BaseComponent._ensure_engine_()
         if source is None:
             relative_path = self._get_relative_path()
             return engine.get_template(relative_path)
         else:
             return engine.from_string(source)
 
-    def _update_context(
+    def _update_context_(
         self,
         context: dict[str, Any],
         field_name: str,
@@ -200,15 +192,51 @@ class BaseComponent(BaseModel):
                 context[field_name] = processed_dict
         return context
 
-    def _get_javascript_content(self) -> str | None:
-        js_file_name = self._get_js_file_name()
+    def _get_javascript_file_name(self) -> str | None:
+        raw_path = self._get_raw_path()
+        snake_case_name = self.js if self.js else self._get_snake_case_name()
+        js_file_name = snake_case_name.replace("_", "-") + ("" if self.js else ".js")
+        if not os.path.exists(f"{raw_path}/{js_file_name}"):
+            return None
+        return js_file_name
+
+    def _get_javascript_path(self) -> str | None:
+        js_file_name = self._get_javascript_file_name()
         if js_file_name:
             raw_path = self._get_raw_path()
             js_path = f"{raw_path}/{js_file_name}"
             if os.path.exists(js_path):
-                with open(js_path, "r") as f:
-                    return f.read()
+                return js_path
         return None
+
+    def _get_javascript_content(self) -> str | None:
+        js_path = self._get_javascript_path()
+        if js_path:
+            with open(js_path, "r") as f:
+                return f.read()
+        return None
+
+    def _collect_javascript_if_needed_(self) -> None:
+        js_path = self._get_javascript_path()
+        if js_path:
+            collected_files = _collected_js_context.get()
+            if js_path not in collected_files:
+                js_content = self._get_javascript_content()
+                if js_content:
+                    scripts = _scripts_context.get()
+                    scripts.append(js_content)
+                    _scripts_context.set(scripts)
+                    collected_files.add(js_path)
+                    _collected_js_context.set(collected_files)
+
+    def _process_extra_html_files_(self, context: dict[str, Any]) -> dict[str, Any]:
+        for html_file in self.html:
+            with open(html_file, "r") as file:
+                html_template = file.read()
+                extra_markup = self.render(html_template, context)
+                html_key = html_file.split("/")[-1].split(".")[0]
+                context[html_key] = Object(html=extra_markup, props=None)
+        return context
 
     def render(
         self, source: str | None = None, base_context: dict[str, Any] | None = None
@@ -234,32 +262,19 @@ class BaseComponent(BaseModel):
         # 2. Render nested components
         for field_name in type(self).model_fields.keys():
             field_value = getattr(self, field_name)
-            context = self._update_context(context, field_name, field_value)
+            context = self._update_context_(context, field_name, field_value)
 
         # 3. Update context with all components & extra HTML templates
         context.update(Registry.get())
         if is_root:
-            for html_file in self.html:
-                with open(html_file, "r") as file:
-                    html_template = file.read()
-                    extra_markup = self.render(html_template, context)
-                    html_key = html_file.split("/")[-1].split(".")[0]
-                    context[html_key] = Object(html=extra_markup, props=None)
+            context = self._process_extra_html_files_(context)
 
         # 4. Render template
         rendered_template = template.render(context)
 
         # 5. Collect JavaScript from this component (only for component's own template, not extra HTML)
         if source is None:
-            collected_ids = _collected_js_context.get()
-            if self.id not in collected_ids:
-                js_content = self._get_javascript_content()
-                if js_content:
-                    scripts = _scripts_context.get()
-                    scripts.append(js_content)
-                    _scripts_context.set(scripts)
-                    collected_ids.add(self.id)
-                    _collected_js_context.set(collected_ids)
+            self._collect_javascript_if_needed_()
 
         # 6. Append all collected scripts at root level
         if is_root:
