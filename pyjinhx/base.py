@@ -20,6 +20,10 @@ _scripts_context: ContextVar[list[str]] = ContextVar(
     "scripts_collection", default=[]
 )
 
+_collected_js_context: ContextVar[set[str]] = ContextVar(
+    "collected_js_components", default=set()
+)
+
 
 class Registry:
     """
@@ -218,6 +222,7 @@ class BaseComponent(BaseModel):
         is_root = base_context is None
         if is_root:
             _scripts_context.set([])
+            _collected_js_context.set(set())
 
         # 1. Load context & template
         if base_context is None:
@@ -227,10 +232,9 @@ class BaseComponent(BaseModel):
         template = self._load_template(source)
 
         # 2. Render nested components
-        if is_root:
-            for field_name in type(self).model_fields.keys():
-                field_value = getattr(self, field_name)
-                context = self._update_context(context, field_name, field_value)
+        for field_name in type(self).model_fields.keys():
+            field_value = getattr(self, field_name)
+            context = self._update_context(context, field_name, field_value)
 
         # 3. Update context with all components & extra HTML templates
         context.update(Registry.get())
@@ -247,11 +251,15 @@ class BaseComponent(BaseModel):
 
         # 5. Collect JavaScript from this component (only for component's own template, not extra HTML)
         if source is None:
-            js_content = self._get_javascript_content()
-            if js_content:
-                scripts = _scripts_context.get()
-                scripts.append(js_content)
-                _scripts_context.set(scripts)
+            collected_ids = _collected_js_context.get()
+            if self.id not in collected_ids:
+                js_content = self._get_javascript_content()
+                if js_content:
+                    scripts = _scripts_context.get()
+                    scripts.append(js_content)
+                    _scripts_context.set(scripts)
+                    collected_ids.add(self.id)
+                    _collected_js_context.set(collected_ids)
 
         # 6. Append all collected scripts at root level
         if is_root:

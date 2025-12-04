@@ -22,21 +22,15 @@ def test_dict_component():
     <div class="panel-sections">
         
         <div class="section-header">
-            
-                <p>Welcome</p>
-            
+            Welcome
         </div>
         
         <div class="section-action">
-            
-                <button id="action-btn">Click Me</button>
-            
+            <button id="action-btn">Click Me</button>
         </div>
         
         <div class="section-footer">
-            
-                <p>Thank you</p>
-            
+            Thank you
         </div>
         
     </div>

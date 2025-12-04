@@ -1,0 +1,11 @@
+<div id="{{ id }}" class="container">
+    <h1>{{ name }}</h1>
+    <div class="container-content">
+        {% for button_list in button_lists %}
+        <div class="list-wrapper">
+            {{ button_list }}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
