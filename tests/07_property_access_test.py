@@ -7,7 +7,8 @@ def test_nested_item_property_access():
     
     rendered = component._render()
     
-    assert rendered == """<div id="prop-access-1" class="test-component">
+    assert rendered == """<script>console.log('Button loaded');</script>
+<div id="prop-access-1" class="test-component">
     <div class="nested">
         <p>Nested component ID: nested-btn</p>
         <p>Nested component text: Nested Button</p>
@@ -17,6 +18,5 @@ def test_nested_item_property_access():
 
     </div>
 </div>
-
-<script>console.log('Button loaded');</script>"""
+"""
 

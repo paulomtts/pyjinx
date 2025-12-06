@@ -10,14 +10,14 @@ def test_multiple_extra_js_files():
     
     rendered = component.render()
     
-    assert rendered == """<div id="multi-js-1" class="test-component">
-    <div class="text">Multiple JS</div>
-</div>
-
-<script>console.log('Button loaded');
+    assert rendered == """<script>console.log('Button loaded');
 console.log('Extra script loaded');
 
-</script>"""
+</script>
+<div id="multi-js-1" class="test-component">
+    <div class="text">Multiple JS</div>
+</div>
+"""
 
 
 def test_multiple_extra_html_files():
@@ -29,11 +29,11 @@ def test_multiple_extra_html_files():
     
     rendered = component.render()
     
-    assert rendered == """<div id="multi-html-1" class="test-component">
+    assert rendered == """<script>console.log('Button loaded');</script>
+<div id="multi-html-1" class="test-component">
     <div class="text">Multiple HTML</div><span>Extra HTML Content</span>
 </div>
-
-<script>console.log('Button loaded');</script>"""
+"""
 
 
 def test_multiple_extra_js_and_html():
@@ -46,12 +46,12 @@ def test_multiple_extra_js_and_html():
     
     rendered = component.render()
     
-    assert rendered == """<div id="multi-files-1" class="test-component">
-    <div class="text">Multiple Files</div><span>Extra HTML Content</span>
-</div>
-
-<script>console.log('Button loaded');
+    assert rendered == """<script>console.log('Button loaded');
 console.log('Extra script loaded');
 
-</script>"""
+</script>
+<div id="multi-files-1" class="test-component">
+    <div class="text">Multiple Files</div><span>Extra HTML Content</span>
+</div>
+"""
 

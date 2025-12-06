@@ -16,7 +16,8 @@ def test_dict_component():
     
     rendered = component._render()
     
-    assert rendered == """<div id="wrapper-1" class="test-component">
+    assert rendered == """<script>console.log('Button loaded');</script>
+<div id="wrapper-1" class="test-component">
     <h2>My Wrapper</h2>
     <div class="sections">
         
@@ -37,6 +38,5 @@ def test_dict_component():
         
     </div>
 </div>
-
-<script>console.log('Button loaded');</script>"""
+"""
 

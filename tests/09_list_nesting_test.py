@@ -14,7 +14,8 @@ def test_nested_list_of_components():
     
     rendered = component._render()
     
-    assert rendered == """<div id="list-1" class="test-component">
+    assert rendered == """<script>console.log('Button loaded');</script>
+<div id="list-1" class="test-component">
     <h2>Action Buttons</h2>
     <div class="items">
         <ul>
@@ -37,6 +38,5 @@ def test_nested_list_of_components():
         </ul>
     </div>
 </div>
-
-<script>console.log('Button loaded');</script>"""
+"""
 

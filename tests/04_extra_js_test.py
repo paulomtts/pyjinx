@@ -9,12 +9,12 @@ def test_basic_rendering_with_js_and_extra_js():
     )
     rendered = component._render()
     
-    assert rendered == """<div id="extra-js-1" class="test-component">
-    <div class="text">Extra JS Component</div>
-</div>
-
-<script>console.log('Button loaded');
+    assert rendered == """<script>console.log('Button loaded');
 console.log('Extra script loaded');
 
-</script>"""
+</script>
+<div id="extra-js-1" class="test-component">
+    <div class="text">Extra JS Component</div>
+</div>
+"""
 

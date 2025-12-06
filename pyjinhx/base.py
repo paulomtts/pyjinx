@@ -299,7 +299,7 @@ class BaseComponent(BaseModel):
             scripts = _scripts_context.get()
             if scripts:
                 combined_script = "\n".join(scripts)
-                rendered_template += f"\n<script>{combined_script}</script>"
+                rendered_template = f"<script>{combined_script}</script>\n{rendered_template}"
 
         return Markup(rendered_template).unescape()
 

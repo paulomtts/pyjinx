@@ -72,9 +72,9 @@ def test_html_method():
     
     rendered = component.__html__()
     
-    assert rendered == """<div id="auto-1" class="test-component">
+    assert rendered == """<script>console.log('Button loaded');</script>
+<div id="auto-1" class="test-component">
     <div class="text">Auto Render</div>
 </div>
-
-<script>console.log('Button loaded');</script>"""
+"""
 

@@ -8,7 +8,8 @@ def test_3_level_deep_nesting():
     
     rendered = level1._render()
     
-    assert rendered == """<div id="level1-1" class="test-component">
+    assert rendered == """<script>console.log('Button loaded');</script>
+<div id="level1-1" class="test-component">
     <h2>Level 1</h2>
     <div class="nested">
         <p>Nested component ID: level2-1</p>
@@ -27,6 +28,5 @@ def test_3_level_deep_nesting():
 
     </div>
 </div>
-
-<script>console.log('Button loaded');</script>"""
+"""
 

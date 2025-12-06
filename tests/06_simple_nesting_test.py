@@ -11,7 +11,8 @@ def test_simple_nesting():
     
     rendered = component._render()
     
-    assert rendered == """<div id="wrapper-1" class="test-component">
+    assert rendered == """<script>console.log('Button loaded');</script>
+<div id="wrapper-1" class="test-component">
     <h2>My Wrapper</h2>
     <div class="nested">
         <p>Nested component ID: action-btn</p>
@@ -22,8 +23,7 @@ def test_simple_nesting():
 
     </div>
 </div>
-
-<script>console.log('Button loaded');</script>"""
+"""
 
 
 def test_simple_nesting_with_extra_html():
@@ -37,7 +37,8 @@ def test_simple_nesting_with_extra_html():
     
     rendered = component._render()
     
-    assert rendered == """<div id="wrapper-1" class="test-component">
+    assert rendered == """<script>console.log('Button loaded');</script>
+<div id="wrapper-1" class="test-component">
     <h2>My Wrapper</h2>
     <div class="nested">
         <p>Nested component ID: action-btn</p>
@@ -48,6 +49,5 @@ def test_simple_nesting_with_extra_html():
 
     </div><span>Extra HTML Content</span>
 </div>
-
-<script>console.log('Button loaded');</script>"""
+"""
 

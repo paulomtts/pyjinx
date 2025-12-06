@@ -13,7 +13,8 @@ def test_mixed_list_content():
     
     rendered = component.render()
     
-    assert rendered == """<div id="mixed-list-1" class="test-component">
+    assert rendered == """<script>console.log('Button loaded');</script>
+<div id="mixed-list-1" class="test-component">
     <h2>Mixed List</h2>
     <div class="items">
         <ul>
@@ -37,8 +38,7 @@ def test_mixed_list_content():
         </ul>
     </div>
 </div>
-
-<script>console.log('Button loaded');</script>"""
+"""
 
 
 def test_mixed_dict_content():
@@ -59,7 +59,8 @@ def test_mixed_dict_content():
     
     rendered = component.render()
     
-    assert rendered == """<div id="mixed-dict-1" class="test-component">
+    assert rendered == """<script>console.log('Button loaded');</script>
+<div id="mixed-dict-1" class="test-component">
     <h2>Mixed Dict</h2>
     <div class="sections">
         
@@ -91,6 +92,5 @@ def test_mixed_dict_content():
         
     </div>
 </div>
-
-<script>console.log('Button loaded');</script>"""
+"""
 
