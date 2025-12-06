@@ -1,7 +1,7 @@
 from pyjinhx import BaseComponent
 
 
-class Button(BaseComponent):
+class NoJsComponent(BaseComponent):
     id: str
     text: str
 

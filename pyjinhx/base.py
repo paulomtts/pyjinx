@@ -125,7 +125,7 @@ class BaseComponent(BaseModel):
         Automatically renders the component when accessed.
         This allows for cleaner template syntax: {{ MyComponent }} instead of {{ MyComponent.render() }}
         """
-        return self.render()
+        return self._render()
 
     def _get_snake_case_name(self, name: str | None = None) -> str:
         if name is None:
@@ -171,12 +171,12 @@ class BaseComponent(BaseModel):
         Updates the context with rendered components by their ID.
         """
         if isinstance(field_value, BaseComponent):
-            context[field_name] = Object(html=field_value.render(base_context=context), props=field_value)
+            context[field_name] = Object(html=field_value._render(base_context=context), props=field_value)
         elif isinstance(field_value, list):
             processed_list = []
             for item in field_value:
                 if isinstance(item, BaseComponent):
-                    processed_list.append(Object(html=item.render(base_context=context), props=item))
+                    processed_list.append(Object(html=item._render(base_context=context), props=item))
                 else:
                     processed_list.append(item)
             if processed_list:
@@ -185,7 +185,7 @@ class BaseComponent(BaseModel):
             processed_dict = {}
             for key, value in field_value.items():
                 if isinstance(value, BaseComponent):
-                    processed_dict[key] = Object(html=value.render(base_context=context), props=value)
+                    processed_dict[key] = Object(html=value._render(base_context=context), props=value)
                 else:
                     processed_dict[key] = value
             if processed_dict:
@@ -247,12 +247,12 @@ class BaseComponent(BaseModel):
         for html_file in self.html:
             with open(html_file, "r") as file:
                 html_template = file.read()
-                extra_markup = self.render(html_template, context)
+                extra_markup = self._render(html_template, context)
                 html_key = html_file.split("/")[-1].split(".")[0]
                 context[html_key] = Object(html=extra_markup, props=None)
         return context
 
-    def render(
+    def _render(
         self, source: str | None = None, base_context: dict[str, Any] | None = None
     ) -> Markup:
         """
@@ -302,3 +302,6 @@ class BaseComponent(BaseModel):
                 rendered_template += f"\n<script>{combined_script}</script>"
 
         return Markup(rendered_template).unescape()
+
+    def render(self) -> Markup:
+        return self._render()
