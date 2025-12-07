@@ -154,11 +154,41 @@ class BaseComponent(BaseModel):
 
         return f"{relative_dir}/{snake_case_name}.html"
 
+    def _collect_extra_html_files_(self) -> str:
+        combined_html = ""
+        engine = BaseComponent._ensure_engine_()
+        loader = engine.loader
+        if not isinstance(loader, FileSystemLoader):
+            raise ValueError("Jinja2 loader must be a FileSystemLoader")
+        
+        search_path = (
+            loader.searchpath[0]
+            if isinstance(loader.searchpath, list)
+            else loader.searchpath
+        )
+        
+        for html_file in self.html:
+            if os.path.isabs(html_file):
+                file_path = html_file
+            else:
+                file_path = os.path.join(search_path, html_file)
+            
+            with open(file_path, "r") as file:
+                combined_html += file.read() + "\n"
+
+        return combined_html
+
     def _load_template(self, source: str | None = None) -> Template:
         engine = BaseComponent._ensure_engine_()
-        if source is None:
+        # check if this is direct instance of BaseComponent, and not a subclass of it
+        if source is None and type(self) is not BaseComponent:
             relative_path = self._get_relative_path()
             return engine.get_template(relative_path)
+        elif source is None and type(self) is BaseComponent:
+            if not self.html:
+                raise FileNotFoundError("No template files found. BaseComponent requires 'html' property to be set with template file paths.")
+            html_content = self._collect_extra_html_files_()
+            return engine.from_string(html_content)
         else:
             return engine.from_string(source)
 
@@ -245,8 +275,24 @@ class BaseComponent(BaseModel):
                         _collected_js_context.set(collected_files)
 
     def _process_extra_html_files_(self, context: dict[str, Any]) -> dict[str, Any]:
+        engine = BaseComponent._ensure_engine_()
+        loader = engine.loader
+        if not isinstance(loader, FileSystemLoader):
+            raise ValueError("Jinja2 loader must be a FileSystemLoader")
+        
+        search_path = (
+            loader.searchpath[0]
+            if isinstance(loader.searchpath, list)
+            else loader.searchpath
+        )
+        
         for html_file in self.html:
-            with open(html_file, "r") as file:
+            if os.path.isabs(html_file):
+                file_path = html_file
+            else:
+                file_path = os.path.join(search_path, html_file)
+            
+            with open(file_path, "r") as file:
                 html_template = file.read()
                 extra_markup = self._render(html_template, context)
                 html_key = html_file.split("/")[-1].split(".")[0]
@@ -262,6 +308,7 @@ class BaseComponent(BaseModel):
         Returns:
             Markup: The rendered component.
         """
+        # 0. Setup
         is_root = base_context is None
         if is_root:
             _scripts_context.set([])
