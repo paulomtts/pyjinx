@@ -7,7 +7,7 @@ from typing import Any, ClassVar, Optional, List
 
 from jinja2 import Environment, FileSystemLoader, Template
 from markupsafe import Markup
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 
 logger = logging.getLogger("pyjinhx")
 logger.setLevel(logging.WARNING)
@@ -62,6 +62,7 @@ class Object(BaseModel):
 class BaseComponent(BaseModel):
     "Provides functionality for declaring UI components in python."
 
+    model_config = ConfigDict(extra='allow')
     _engine: ClassVar[Optional[Environment]] = None
 
     @classmethod
