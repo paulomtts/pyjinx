@@ -109,3 +109,6 @@ html = card.render()
     </ul>
 </div>
 ```
+
+# TODO
+- Add tests for generic components, i.e. BaseComponent declarations with extra properties
